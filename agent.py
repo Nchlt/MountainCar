@@ -116,7 +116,7 @@ class Patrick:
             x = policy.reshape(self.positions.shape[0]*self.velocities.shape[0], -1)
             x = np.floor(x)
             d_policy = x.reshape(self.positions.shape[0], self.velocities.shape[0])
-            testing_steps = 1000
+            testing_steps = 10001
             distances = []
 
             for i in range(testing_steps):
@@ -144,15 +144,17 @@ class Patrick:
             #print('Current best value = '+str(value))
 
             value = min(distances) * iter_counter
+            #print(min(distances), iter_counter)
             #print("Evaluated on %d steps value = %f"%(testing_steps, value))
             #print(value)
             return value
 
-        best_policy, _ = cma.fmin2(obj_function, self.init, 0.01,{
+        best_policy, _ = cma.fmin(obj_function, self.init, 0.1,{
         'BoundaryHandler': 'BoundTransform',
-        'bounds': [[0 for _ in range(self.positions.shape[0]*self.velocities.shape[0])], [3 for _ in range(self.positions.shape[0]*self.velocities.shape[0])]],
-        'popsize':500,
-        'CMA_mu':20,
+        'bounds':[0,3],
+        #'bounds': [[0 for _ in range(self.positions.shape[0]*self.velocities.shape[0])], [3 for _ in range(self.positions.shape[0]*self.velocities.shape[0])]],
+        'popsize':1000,
+        'CMA_mu':10,
         'verbose':1
         })
         self.policy = np.floor(best_policy)
@@ -191,6 +193,7 @@ class Patrick:
             - position: [-1.2, 0.6]
             - velocity: [-0.07, 0.07]
         """
+        print("Test")
         return np.random.choice([0, 1, 2])
 
 Agent = Patrick
