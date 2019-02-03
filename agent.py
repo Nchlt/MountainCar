@@ -61,12 +61,13 @@ class Patrick:
         """
         Init a new agent.
         """
-        self.cto_policy = None
-        self.b2_policy = np.array([list([0., 1., 0., 0., 0., 1.]), list([0., 0., 1., 2., 0., 0.]), list([0., 0., 0., 0., 2., 0.]), list([1., 1., 2., 0., 2., 2.]), list([2., 0., 0., 0., 2., 1.]), list([1., 0., 0., 2., 0., 0.])])
+        # self.policy114 = pickle.load(open('114.p', 'rb'))
+        # self.cto_policy = None
+        # self.b2_policy = np.array([list([0., 1., 0., 0., 0., 1.]), list([0., 0., 1., 2., 0., 0.]), list([0., 0., 0., 0., 2., 0.]), list([1., 1., 2., 0., 2., 2.]), list([2., 0., 0., 0., 2., 1.]), list([1., 0., 0., 2., 0., 0.])])
         # self.b_policy = np.array([list([1., 1., 0., 1., 1., 1.]), list([1., 0., 1., 2., 0., 0.]), list([0., 1., 0., 0., 2., 0.]), list([2., 1., 2., 0., 2., 2.]), list([2., 0., 0., 0., 2., 2.]), list([1., 0., 1., 2., 0., 0.])])
         self.b_policy = np.array([list([0., 1., 0., 0., 0., 1.]), list([0., 0., 1., 2., 0., 0.]), list([0., 0., 0., 0., 2., 0.]), list([1., 1., 2., 0., 2., 2.]), list([2., 0., 0., 0., 2., 1.]), list([1., 0., 0., 2., 0., 0.])])
-        self.positions = np.linspace(start=-1.2, stop=0.6, num=6)
-        self.velocities = np.linspace(start=-0.07, stop=0.07, num=6)
+        self.positions = np.linspace(start=-1.2, stop=0.6, num=10)
+        self.velocities = np.linspace(start=-0.07, stop=0.07, num=20)
         # Here we initialize the policy with a previous solution
         #self.policy = pickle.load(open('bestPol.p', 'rb')).reshape(50, 4)
         #self.policy = np.array([list([0, 1, 1, 2, 1, 2, 2, 1, 1, 1]), list([1, 2, 2, 1, 2, 2, 2, 1, 2, 1]), list([1, 2, 1, 1, 2, 2, 1, 2, 1, 2]), list([1, 1, 2, 0, 2, 2, 2, 2, 1, 2]), list([2, 0, 2, 2, 0, 1, 2, 1, 2, 1]), list([0, 2, 0, 1, 2, 2, 1, 2, 1, 2]), list([2, 2, 2, 2, 1, 2, 2, 1, 2, 2]), list([2, 1, 2, 1, 1, 2, 1, 2, 1, 1]), list([0, 2, 2, 2, 2, 1, 2, 1, 2, 2]), list([2, 1, 2, 2, 2, 1, 2, 0, 2, 2])])
@@ -74,9 +75,9 @@ class Patrick:
         # self.policy = np.random.randint(low=0, high=3,
         #                                 size=(self.positions.shape[0],
         #                                 self.velocities.shape[0]))
-
+        self.policy = np.zeros(shape=(self.positions.shape[0], self.velocities.shape[0]))
         #self.policy = np.array([list([1., 0., 0., 0., 2., 0.]), list([2., 1., 1., 2., 0., 0.]), list([0., 2., 0., 0., 2., 0.]), list([2., 2., 2., 0., 2., 1.]), list([2., 0., 0., 1., 2., 2.]), list([1., 0., 2., 2., 0., 0.])])
-        self.policy = np.array([list([1., 1., 0., 1., 1., 1.]), list([1., 0., 1., 2., 0., 0.]), list([0., 1., 0., 0., 2., 0.]), list([2., 1., 2., 0., 2., 2.]), list([2., 0., 0., 0., 2., 2.]), list([1., 0., 1., 2., 0., 0.])])
+        # self.policy = np.array([list([1., 1., 0., 1., 1., 1.]), list([1., 0., 1., 2., 0., 0.]), list([0., 1., 0., 0., 2., 0.]), list([2., 1., 2., 0., 2., 2.]), list([2., 0., 0., 0., 2., 2.]), list([1., 0., 1., 2., 0., 0.])])
         # self.policy = pickle.load(open('b2p.p', 'rb'))
         self.init = self.policy.reshape(self.positions.shape[0]*self.velocities.shape[0])
         #self.init = self.policy.reshape(self.policy.shape[0]*self.policy.shape[1])
@@ -128,11 +129,41 @@ class Patrick:
         self.min_iter_win = 99999999999
         self.calls_to_obj = 0
         self.previous_value = 9999999999999
-        def obj_function(policy):
 
-            self.calls_to_obj += 1
-            print(self.calls_to_obj)
-            print(self.previous_value)
+        def obj_function(policy):
+            env.reset()
+            iter_counter = 0
+            x = policy.reshape(self.positions.shape[0]*self.velocities.shape[0], -1)
+            x = np.floor(x)
+            d_policy = x.reshape(self.positions.shape[0], self.velocities.shape[0])
+
+            distances = []
+            distance_mid = []
+            energy = []
+            malus = 200
+            for i in range(200):
+                # We take an action according to the given policy
+                position, velocity = env.state
+                distances.append(np.absolute(0.6 - position))
+                distance_mid.append(np.absolute(-0.56 - position))
+                energy.append(0.5*(velocity**2))
+                if position == 0.6:
+                    print("WON step : %d"%i)
+                    malus = (i / 200) * 200
+                    value = -sum(distance_mid) -max(energy) + malus
+
+                    return value
+                action = policy_action(position, velocity, d_policy)
+                _, _ = env.act(int(np.floor(action)))
+
+            value = -sum(distance_mid)-max(energy) + malus
+
+            return value
+
+        def obj_function_old(policy):
+            # self.calls_to_obj += 1
+            # print(self.calls_to_obj)
+            # print(self.previous_value)
             env.reset()
             #print(env.state[0])
             iter_counter = 0
@@ -156,7 +187,7 @@ class Patrick:
             nb_iter = testing_steps
 
             for i in range(testing_steps):
-                env.render()
+                # env.render()
                 # We compute the distance to the optimal as the difference
                 # between the optimal position and the actual position
                 #distance_to_goal = env.state[0] - 0.5
@@ -184,14 +215,15 @@ class Patrick:
                 # print(done)
                 #_, _ = env.act(int(np.ceil(action)))
                 iter_counter = i
-                if min(distances) ==0:
-
+                if env.state[0] == 0.6:
                     # print("WON "+str(iter_counter))
                     if iter_counter < self.min_iter_win:
                         self.min_iter_win = iter_counter
                         print('New record WON at %d iteration.'%iter_counter)
-                        self.b2_policy = policy
-                        pickle.dump(self.b2_policy, open('b2p.p', 'wb'))
+                        # if iter_counter == 113:
+                        #     print("Awwi 114")
+                        #     self.b2_policy = policy
+                        #     pickle.dump(d_policy, open('114.p', 'wb'))
                         # exit()
                         # print("Updated b2_policy")
                     value = iter_counter * sum(distances)
@@ -251,15 +283,15 @@ class Patrick:
             # print(value)
             # return value
         # On good seed 239448 237591
-        best_policy, _ = cma.fmin2(obj_function, self.init, 0.08,{
+        best_policy, _ = cma.fmin2(obj_function, self.init, 2,{
         #'BoundaryHandler': 'BoundPenalty',
         'BoundaryHandler': 'BoundTransform',
         'bounds':[0,3],
         #'bounds': [[0 for _ in range(self.positions.shape[0]*self.velocities.shape[0])], [3 for _ in range(self.positions.shape[0]*self.velocities.shape[0])]],
-        'popsize':200,
-        'CMA_mu':5,
+        'popsize':15,
+        'CMA_mu':1,
         'verbose':1,
-        'ftarget':8.307408575667165e3,
+        # 'ftarget':10385.727098947085,
         'seed': 237591
         })
         print("Optimization FINISHED")
@@ -325,7 +357,7 @@ class Patrick:
                 return position_index, velocity_index
         #print("Training over, now using optimal policy:")
 
-        x = self.cto_policy.reshape(self.positions.shape[0]*self.velocities.shape[0], -1)
+        x = self.b_policy.reshape(self.positions.shape[0]*self.velocities.shape[0], -1)
         x = np.floor(x)
         d_policy = x.reshape(self.positions.shape[0], self.velocities.shape[0])
         action = policy_action(observation[0], observation[1], d_policy)
