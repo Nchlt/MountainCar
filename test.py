@@ -14,7 +14,7 @@ def obj_fun(X):
     return X.sum()
 
 print(obj_fun(X))
-solution, _ = cma.fmin2(obj_fun, X, 1,{
+solution, d = cma.fmin2(obj_fun, X, 1,{
 'BoundaryHandler': 'BoundTransform',
 'bounds': [0,3],
 'popsize':1000,
@@ -22,7 +22,7 @@ solution, _ = cma.fmin2(obj_fun, X, 1,{
 'ftarget':2
 })
 
-
+print(d)
 solution = np.floor(solution)
 print(solution)
 
