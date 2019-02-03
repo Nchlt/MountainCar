@@ -16,9 +16,10 @@ def obj_fun(X):
 print(obj_fun(X))
 solution, _ = cma.fmin2(obj_fun, X, 1,{
 'BoundaryHandler': 'BoundTransform',
-'bounds': [[0 for _ in range(200)], [2 for _ in range(200)]],
+'bounds': [0,3],
 'popsize':1000,
-'CMA_mu':10
+'CMA_mu':10,
+'ftarget':2
 })
 
 
